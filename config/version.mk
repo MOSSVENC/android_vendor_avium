@@ -22,10 +22,29 @@ AVIUM_PATCH_VERSION := 2
 AVIUM_VER := AviumUI-$(AVIUM_MAJOR_VERSION).$(AVIUM_MINOR_VERSION).$(AVIUM_PATCH_VERSION)-$(LINEAGE_BUILD)
 
 # Date format
-ifeq ($(AVIUM_VERSION_APPEND_TIME_OF_DAY),true)
-    AVIUM_BUILD_DATE := $(shell date -u +%Y%m%d_%H%M%S)
+# SOURCE_DATE_EPOCH/BUILD_DATETIME are fixed build inputs. Prefer them so
+# repeated builds of the same source produce the same AviumUI version string.
+ifneq ($(strip $(SOURCE_DATE_EPOCH)),)
+    AVIUM_BUILD_EPOCH := $(SOURCE_DATE_EPOCH)
+else ifneq ($(strip $(BUILD_DATETIME)),)
+    AVIUM_BUILD_EPOCH := $(BUILD_DATETIME)
 else
-    AVIUM_BUILD_DATE := $(shell date -u +%Y%m%d)
+    AVIUM_BUILD_EPOCH :=
+endif
+
+ifeq ($(strip $(AVIUM_BUILD_EPOCH)),)
+    ifeq ($(strip $(AVIUM_BUILD_DATE)),)
+        $(warning Neither SOURCE_DATE_EPOCH nor BUILD_DATETIME is set; AviumUI build date is not reproducible)
+    endif
+    AVIUM_BUILD_DATE_CMD := date -u
+else
+    AVIUM_BUILD_DATE_CMD := date -u -d @$(AVIUM_BUILD_EPOCH)
+endif
+
+ifeq ($(AVIUM_VERSION_APPEND_TIME_OF_DAY),true)
+    AVIUM_BUILD_DATE ?= $(shell $(AVIUM_BUILD_DATE_CMD) +%Y%m%d_%H%M%S)
+else
+    AVIUM_BUILD_DATE ?= $(shell $(AVIUM_BUILD_DATE_CMD) +%Y%m%d)
 endif
 
 # Display version
