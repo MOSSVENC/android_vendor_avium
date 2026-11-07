@@ -22,19 +22,19 @@ AVIUM_PATCH_VERSION := 2
 AVIUM_VER := AviumUI-$(AVIUM_MAJOR_VERSION).$(AVIUM_MINOR_VERSION).$(AVIUM_PATCH_VERSION)-$(LINEAGE_BUILD)
 
 # Date format
-# SOURCE_DATE_EPOCH/BUILD_DATETIME are fixed build inputs. Prefer them so
-# repeated builds of the same source produce the same AviumUI version string.
+# SOURCE_DATE_EPOCH is the fixed build input. BUILD_DATETIME is an obsolete
+# Kati variable in Android 16; use the file-backed value only as a fallback.
 ifneq ($(strip $(SOURCE_DATE_EPOCH)),)
     AVIUM_BUILD_EPOCH := $(SOURCE_DATE_EPOCH)
-else ifneq ($(strip $(BUILD_DATETIME)),)
-    AVIUM_BUILD_EPOCH := $(BUILD_DATETIME)
+else ifneq ($(strip $(BUILD_DATETIME_FROM_FILE)),)
+    AVIUM_BUILD_EPOCH := $(BUILD_DATETIME_FROM_FILE)
 else
     AVIUM_BUILD_EPOCH :=
 endif
 
 ifeq ($(strip $(AVIUM_BUILD_EPOCH)),)
     ifeq ($(strip $(AVIUM_BUILD_DATE)),)
-        $(warning Neither SOURCE_DATE_EPOCH nor BUILD_DATETIME is set; AviumUI build date is not reproducible)
+        $(warning Neither SOURCE_DATE_EPOCH nor BUILD_DATETIME_FROM_FILE is set; AviumUI build date is not reproducible)
     endif
     AVIUM_BUILD_DATE_CMD := date -u
 else
